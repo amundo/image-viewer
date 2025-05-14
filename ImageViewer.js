@@ -28,29 +28,29 @@ export class ImageViewer extends HTMLElement {
         <img>
       </figure>
     `
-    this.figureEl = this.querySelector('figure')
-    this.imgEl = this.querySelector('img')
+    this.figure = this.querySelector('figure')
+    this.img = this.querySelector('img')
 
   }
 
   attachEvents() {
-    this.figureEl.addEventListener('wheel', this.onWheel, { passive: false })
-    this.figureEl.addEventListener('mousedown', this.onPointerDown)
+    this.figure.addEventListener('wheel', this.onWheel, { passive: false })
+    this.figure.addEventListener('mousedown', this.onPointerDown)
     window.addEventListener('mousemove', this.onPointerMove)
     window.addEventListener('mouseup', this.onPointerUp)
   }
 
   updateSrc = () => {
     const src = this.getAttribute('src')
-    if (src && this.imgEl) {
-      this.imgEl.src = src
+    if (src && this.img) {
+      this.img.src = src
     }
   }
 
   onWheel = (e) => {
     e.preventDefault()
 
-    const rect = this.figureEl.getBoundingClientRect()
+    const rect = this.figure.getBoundingClientRect()
     const mouseX = e.clientX - rect.left
     const mouseY = e.clientY - rect.top
 
@@ -70,7 +70,7 @@ export class ImageViewer extends HTMLElement {
   onPointerDown = (e) => {
     this.isDragging = true
     this.lastPointer = { x: e.clientX, y: e.clientY }
-    this.figureEl.classList.add('dragging')
+    this.figure.classList.add('dragging')
   }
 
   onPointerMove = (e) => {
@@ -89,11 +89,11 @@ export class ImageViewer extends HTMLElement {
 
   onPointerUp = () => {
     this.isDragging = false
-    this.figureEl.classList.remove('dragging')
+    this.figure.classList.remove('dragging')
   }
 
   updateTransform = () => {
-    this.imgEl.style.transform = `translate(${this.translate.x}px, ${this.translate.y}px) scale(${this.scale})`
+    this.img.style.transform = `translate(${this.translate.x}px, ${this.translate.y}px) scale(${this.scale})`
   }
 }
 
