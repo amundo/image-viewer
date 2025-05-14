@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "build": "pandoc -f markdown -t html --section-divs --css zoomable-image-docs.css --template=template.html -o zoomable-image-docs.html zoomable-image-docs.md"
+  }
+}
