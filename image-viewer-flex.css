@@ -1,13 +1,15 @@
 * {
   box-sizing: border-box;
-  margin:0;
+  margin: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
+
 body {
-  padding:2em;
+  padding: 2em;
   margin: 0;
   height: 100vh;
   display: grid;
@@ -19,16 +21,14 @@ h1 {
 }
 
 image-viewer {
-  border:1px solid;
+  border: 1px solid;
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  min-width: 0;  /* 🔥 prevents overflow in grid */
+  min-width: 0;
   min-height: 0;
 
-
-  
   header.controls {
     padding: 0.5rem;
     background: #f0f0f0;
@@ -53,17 +53,17 @@ image-viewer {
 
     img {
       display: block;
-      max-width: none;      /* optional: ensures it doesn’t shrink */
-      max-height: none;     /* optional: allows full zoom/pan */
+      max-width: none;
+      max-height: none;
       user-select: none;
       pointer-events: none;
       transform-origin: top left;
       will-change: transform;
+      transition: transform 0.1s ease-out;
+      object-fit: contain;
+      width: 100%;
+      height: 100%;
 
-        object-fit: contain;
-        width: 100%;
-        height: 100%;
-      
     }
 
   }
