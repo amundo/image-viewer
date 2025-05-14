@@ -12,18 +12,18 @@ class ImageViewer extends HTMLElement {
     super()
 
     // Component state
-    this._scale = 1
-    this._translateX = 0
-    this._translateY = 0
-    this._isDragging = false
-    this._dragStartX = 0
-    this._dragStartY = 0
-    this._lastTranslateX = 0
-    this._lastTranslateY = 0
-    this._naturalWidth = 0
-    this._naturalHeight = 0
-    this._containerWidth = 0
-    this._containerHeight = 0
+    this.scale = 1
+    this.translateX = 0
+    this.translateY = 0
+    this.isDragging = false
+    this.dragStartX = 0
+    this.dragStartY = 0
+    this.lastTranslateX = 0
+    this.lastTranslateY = 0
+    this.naturalWidth = 0
+    this.naturalHeight = 0
+    this.containerWidth = 0
+    this.containerHeight = 0
 
     // No need to bind methods when using arrow functions
   }
@@ -31,29 +31,29 @@ class ImageViewer extends HTMLElement {
   // Lifecycle methods
   connectedCallback() {
     // Create the DOM structure
-    this._render()
+    this.render()
 
     // Add event listeners
-    this._addEventListeners()
+    this.addEventListeners()
 
     // Set initial image if src attribute exists
     if (this.hasAttribute("src")) {
-      this._setImage(this.getAttribute("src"))
+      this.setImage(this.getAttribute("src"))
     }
 
     // Update container dimensions
-    this._updateContainerDimensions()
+    this.updateContainerDimensions()
 
     // Add resize observer to handle window resizing
-    this._resizeObserver = new ResizeObserver(this._handleResize)
-    this._resizeObserver.observe(this)
+    this.resizeObserver = new ResizeObserver(this.handleResize)
+    this.resizeObserver.observe(this)
   }
 
   disconnectedCallback() {
     // Clean up event listeners and observers
-    this._removeEventListeners()
-    if (this._resizeObserver) {
-      this._resizeObserver.disconnect()
+    this.removeEventListeners()
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
     }
   }
 
@@ -64,7 +64,7 @@ class ImageViewer extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === "src" && oldValue !== newValue) {
-      this._setImage(newValue)
+      this.setImage(newValue)
     }
   }
 
@@ -77,8 +77,8 @@ class ImageViewer extends HTMLElement {
     this.setAttribute("src", value)
   }
 
-  // Private methods
-  _render() {
+  // Component methods
+  render = () => {
     // Create the DOM structure
     this.innerHTML = `
       <header>
@@ -111,299 +111,328 @@ class ImageViewer extends HTMLElement {
     `
 
     // Cache DOM elements
-    this._img = this.querySelector("img")
-    this._zoomInBtn = this.querySelector(".zoom-in")
-    this._zoomOutBtn = this.querySelector(".zoom-out")
-    this._zoomLevelDisplay = this.querySelector(".zoom-level")
-    this._dropdownButton = this.querySelector(".zoom-dropdown-button")
-    this._dropdownContent = this.querySelector(".zoom-dropdown-content")
-    this._selectedOptionDisplay = this.querySelector(".selected-option")
-    this._figure = this.querySelector("figure")
-    this._zoomOptions = this.querySelectorAll(".zoom-dropdown-content button")
+    this.img = this.querySelector("img")
+    this.zoomInBtn = this.querySelector(".zoom-in")
+    this.zoomOutBtn = this.querySelector(".zoom-out")
+    this.zoomLevelDisplay = this.querySelector(".zoom-level")
+    this.dropdownButton = this.querySelector(".zoom-dropdown-button")
+    this.dropdownContent = this.querySelector(".zoom-dropdown-content")
+    this.selectedOptionDisplay = this.querySelector(".selected-option")
+    this.figure = this.querySelector("figure")
+    this.zoomOptions = this.querySelectorAll(".zoom-dropdown-content button")
   }
 
-  _addEventListeners() {
+  addEventListeners = () => {
+    // Store event handler references for later removal
+    this.zoomInHandler = () => this.zoomIn()
+    this.zoomOutHandler = () => this.zoomOut()
+    this.toggleDropdownHandler = () => this.toggleDropdown()
+    this.selectZoomOptionHandler = (e) => this.selectZoomOption(e)
+    this.wheelHandler = (e) => this.handleWheel(e)
+    this.mouseDownHandler = (e) => this.handleMouseDown(e)
+    this.mouseMoveHandler = (e) => this.handleMouseMove(e)
+    this.mouseUpHandler = () => this.handleMouseUp()
+
     // Zoom controls
-    this._zoomInBtn.addEventListener("click", () => this._zoomIn())
-    this._zoomOutBtn.addEventListener("click", () => this._zoomOut())
+    this.zoomInBtn.addEventListener("click", this.zoomInHandler)
+    this.zoomOutBtn.addEventListener("click", this.zoomOutHandler)
 
     // Dropdown
-    this._dropdownButton.addEventListener("click", () => this._toggleDropdown())
-    this._zoomOptions.forEach((option) => {
-      option.addEventListener("click", (e) => this._selectZoomOption(e))
+    this.dropdownButton.addEventListener("click", this.toggleDropdownHandler)
+    this.zoomOptions.forEach((option) => {
+      option.addEventListener("click", this.selectZoomOptionHandler)
     })
 
     // Close dropdown when clicking outside
     document.addEventListener("click", (e) => {
       if (
-        !this._dropdownButton.contains(e.target) &&
-        this._dropdownContent.classList.contains("show")
+        !this.dropdownButton.contains(e.target) &&
+        this.dropdownContent.classList.contains("show")
       ) {
-        this._dropdownContent.classList.remove("show")
+        this.dropdownContent.classList.remove("show")
       }
     })
 
     // Mouse wheel zooming (with shift key)
-    this.addEventListener("wheel", (e) => this._handleWheel(e), {
-      passive: false,
-    })
+    this.addEventListener("wheel", this.wheelHandler, { passive: false })
 
     // Panning
-    this._img.addEventListener("mousedown", (e) => this._handleMouseDown(e))
-    window.addEventListener("mousemove", (e) => this._handleMouseMove(e))
-    window.addEventListener("mouseup", () => this._handleMouseUp())
+    this.img.addEventListener("mousedown", this.mouseDownHandler)
+    window.addEventListener("mousemove", this.mouseMoveHandler)
+    window.addEventListener("mouseup", this.mouseUpHandler)
 
     // Handle image load
-    this._img.addEventListener("load", () => {
-      this._naturalWidth = this._img.naturalWidth
-      this._naturalHeight = this._img.naturalHeight
-      this._resetZoom()
+    this.img.addEventListener("load", () => {
+      this.naturalWidth = this.img.naturalWidth
+      this.naturalHeight = this.img.naturalHeight
+      this.resetZoom()
     })
   }
 
-  _removeEventListeners() {
-    this._zoomInBtn.removeEventListener("click", () => this._zoomIn())
-    this._zoomOutBtn.removeEventListener("click", () => this._zoomOut())
-    this._dropdownButton.removeEventListener(
-      "click",
-      () => this._toggleDropdown(),
-    )
-    this._zoomOptions.forEach((option) => {
-      option.removeEventListener("click", (e) => this._selectZoomOption(e))
+  removeEventListeners = () => {
+    this.zoomInBtn.removeEventListener("click", this.zoomInHandler)
+    this.zoomOutBtn.removeEventListener("click", this.zoomOutHandler)
+    this.dropdownButton.removeEventListener("click", this.toggleDropdownHandler)
+    this.zoomOptions.forEach((option) => {
+      option.removeEventListener("click", this.selectZoomOptionHandler)
     })
-    this.removeEventListener("wheel", (e) => this._handleWheel(e))
-    this._img.removeEventListener("mousedown", (e) => this._handleMouseDown(e))
-    window.removeEventListener("mousemove", (e) => this._handleMouseMove(e))
-    window.removeEventListener("mouseup", () => this._handleMouseUp())
+    this.removeEventListener("wheel", this.wheelHandler)
+    this.img.removeEventListener("mousedown", this.mouseDownHandler)
+    window.removeEventListener("mousemove", this.mouseMoveHandler)
+    window.removeEventListener("mouseup", this.mouseUpHandler)
   }
 
-  _setImage(src) {
-    if (this._img) {
-      this._img.src = src
+  setImage = (src) => {
+    if (this.img) {
+      this.img.src = src
     }
   }
 
-  _handleWheel = (e) => {
+  handleWheel = (e) => {
     // Only zoom if shift key is pressed
     if (e.shiftKey) {
       e.preventDefault()
 
-      // Determine zoom direction
-      if (e.deltaY < 0) {
-        this._zoomIn(e)
-      } else {
-        this._zoomOut(e)
-      }
+      // Get mouse position relative to the container
+      const rect = this.figure.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+
+      // Calculate zoom factor based on wheel direction
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9
+
+      // Zoom to the point where the mouse is
+      this.zoomToPoint(mouseX, mouseY, zoomFactor)
     }
   }
 
-  _handleMouseDown = (e) => {
+  handleMouseDown = (e) => {
     // Start dragging
-    this._isDragging = true
-    this._dragStartX = e.clientX
-    this._dragStartY = e.clientY
-    this._lastTranslateX = this._translateX
-    this._lastTranslateY = this._translateY
+    this.isDragging = true
+    this.dragStartX = e.clientX
+    this.dragStartY = e.clientY
+    this.lastTranslateX = this.translateX
+    this.lastTranslateY = this.translateY
 
     // Change cursor
-    this._img.classList.add("grabbing")
+    this.img.classList.add("grabbing")
 
     // Prevent default behavior
     e.preventDefault()
   }
 
-  _handleMouseMove = (e) => {
-    if (!this._isDragging) return
+  handleMouseMove = (e) => {
+    if (!this.isDragging) return
 
     // Calculate new position
-    const dx = e.clientX - this._dragStartX
-    const dy = e.clientY - this._dragStartY
+    const dx = e.clientX - this.dragStartX
+    const dy = e.clientY - this.dragStartY
 
-    this._translateX = this._lastTranslateX + dx
-    this._translateY = this._lastTranslateY + dy
+    this.translateX = this.lastTranslateX + dx
+    this.translateY = this.lastTranslateY + dy
 
     // Apply the transform
-    this._updateTransform()
+    this.updateTransform()
 
     // Prevent default behavior
     e.preventDefault()
   }
 
-  _handleMouseUp = () => {
+  handleMouseUp = () => {
     // Stop dragging
-    this._isDragging = false
+    this.isDragging = false
 
     // Restore cursor
-    this._img.classList.remove("grabbing")
+    this.img.classList.remove("grabbing")
 
     // Ensure image stays within bounds
-    this._constrainToBounds()
+    this.constrainToBounds()
   }
 
-  _handleResize = () => {
+  handleResize = () => {
     // Update container dimensions
-    this._updateContainerDimensions()
+    this.updateContainerDimensions()
 
     // Reset zoom to maintain proper constraints
-    this._resetZoom()
+    this.resetZoom()
   }
 
-  _updateContainerDimensions = () => {
-    this._containerWidth = this._figure.clientWidth
-    this._containerHeight = this._figure.clientHeight
+  updateContainerDimensions = () => {
+    this.containerWidth = this.figure.clientWidth
+    this.containerHeight = this.figure.clientHeight
   }
 
-  _zoomIn = (e) => {
-    // Increase scale
-    const prevScale = this._scale
-    this._scale = Math.min(this._scale * 1.2, 5) // Limit max zoom to 5x
-
-    // If zooming with mouse wheel, zoom toward cursor position
+  zoomIn = (e) => {
     if (e instanceof MouseEvent) {
-      this._zoomToPoint(e, prevScale)
+      // Get mouse position relative to container for zoom origin
+      const rect = this.figure.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+      this.zoomToPoint(mouseX, mouseY, 1.2)
+    } else {
+      // Default to center zoom if no mouse event
+      this.zoomToPoint(this.containerWidth / 2, this.containerHeight / 2, 1.2)
+    }
+  }
+
+  zoomOut = (e) => {
+    if (e instanceof MouseEvent) {
+      // Get mouse position relative to container for zoom origin
+      const rect = this.figure.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+      this.zoomToPoint(mouseX, mouseY, 0.8)
+    } else {
+      // Default to center zoom if no mouse event
+      this.zoomToPoint(this.containerWidth / 2, this.containerHeight / 2, 0.8)
+    }
+  }
+
+  zoomToPoint = (pointX, pointY, factor) => {
+    // Store the original scale
+    const prevScale = this.scale
+
+    // Calculate new scale with limits
+    if (factor > 1) {
+      this.scale = Math.min(this.scale * factor, 5) // Limit max zoom to 5x
+    } else {
+      this.scale = Math.max(this.scale * factor, 0.1) // Limit min zoom to 0.1x
     }
 
-    // Update transform and display
-    this._updateTransform()
-    this._updateZoomLevelDisplay()
+    // Find the point on the original image that corresponds to the mouse position
+    // First convert screen coordinates to image-relative coordinates
+    const imagePointX = (pointX - this.translateX) / prevScale
+    const imagePointY = (pointY - this.translateY) / prevScale
 
-    // Ensure image stays within bounds
-    this._constrainToBounds()
-  }
+    // Calculate where this point would be after scaling
+    const newScreenPointX = imagePointX * this.scale
+    const newScreenPointY = imagePointY * this.scale
 
-  _zoomOut = (e) => {
-    // Decrease scale
-    const prevScale = this._scale
-    this._scale = Math.max(this._scale / 1.2, 0.1) // Limit min zoom to 0.1x
-
-    // If zooming with mouse wheel, zoom toward cursor position
-    if (e instanceof MouseEvent) {
-      this._zoomToPoint(e, prevScale)
-    }
+    // Adjust translation to keep the point under the cursor
+    this.translateX = pointX - newScreenPointX
+    this.translateY = pointY - newScreenPointY
 
     // Update transform and display
-    this._updateTransform()
-    this._updateZoomLevelDisplay()
+    this.updateTransform()
+    this.updateZoomLevelDisplay()
 
     // Ensure image stays within bounds
-    this._constrainToBounds()
+    this.constrainToBounds()
   }
 
-  _zoomToPoint = (e, prevScale) => {
-    // Get mouse position relative to image
-    const rect = this._figure.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-
-    // Adjust translation to zoom toward mouse position
-    const scaleChange = this._scale / prevScale - 1
-    const centerX = (mouseX - this._translateX) / prevScale
-    const centerY = (mouseY - this._translateY) / prevScale
-
-    this._translateX -= centerX * scaleChange * prevScale
-    this._translateY -= centerY * scaleChange * prevScale
+  toggleDropdown = () => {
+    this.dropdownContent.classList.toggle("show")
   }
 
-  _toggleDropdown = () => {
-    this._dropdownContent.classList.toggle("show")
-  }
-
-  _selectZoomOption = (e) => {
+  selectZoomOption = (e) => {
     // Get the selected zoom option
     const option = e.currentTarget
     const zoomValue = option.getAttribute("data-zoom")
 
     // Update selected option display
-    this._selectedOptionDisplay.textContent = option.textContent
+    this.selectedOptionDisplay.textContent = option.textContent
 
     // Apply the selected zoom
-    this._applyZoomOption(zoomValue)
+    this.applyZoomOption(zoomValue)
 
     // Hide dropdown
-    this._dropdownContent.classList.remove("show")
+    this.dropdownContent.classList.remove("show")
   }
 
-  _applyZoomOption = (zoomValue) => {
-    // Reset translation first
-    this._translateX = 0
-    this._translateY = 0
+  applyZoomOption = (zoomValue) => {
+    // Calculate center point for zooming
+    const centerX = this.containerWidth / 2
+    const centerY = this.containerHeight / 2
 
     // Apply appropriate zoom based on option
     switch (zoomValue) {
       case "actual":
         // Set to actual size (1:1 pixel ratio)
-        this._scale = 1
+        this.scale = 1
         break
       case "fit":
         // Fit entire image in view
-        this._fitImage()
+        this.fitImage()
         break
       case "width":
         // Fit image width to container
-        this._fitWidth()
+        this.fitWidth()
         break
       default:
         // Apply percentage zoom
-        this._scale = parseFloat(zoomValue)
+        this.scale = parseFloat(zoomValue)
     }
 
+    // Reset translation to center
+    this.translateX = centerX - (this.naturalWidth * this.scale) / 2
+    this.translateY = centerY - (this.naturalHeight * this.scale) / 2
+
     // Update transform and display
-    this._updateTransform()
-    this._updateZoomLevelDisplay()
+    this.updateTransform()
+    this.updateZoomLevelDisplay()
 
     // Ensure image stays within bounds
-    this._constrainToBounds()
+    this.constrainToBounds()
   }
 
-  _fitImage = () => {
+  fitImage = () => {
     // Calculate scale to fit the entire image within the container
-    const scaleX = this._containerWidth / this._naturalWidth
-    const scaleY = this._containerHeight / this._naturalHeight
-    this._scale = Math.min(scaleX, scaleY)
+    const scaleX = this.containerWidth / this.naturalWidth
+    const scaleY = this.containerHeight / this.naturalHeight
+    this.scale = Math.min(scaleX, scaleY)
   }
 
-  _fitWidth = () => {
+  fitWidth = () => {
     // Calculate scale to fit the image width to the container width
-    this._scale = this._containerWidth / this._naturalWidth
+    this.scale = this.containerWidth / this.naturalWidth
   }
 
-  _resetZoom = () => {
+  resetZoom = () => {
     // Default to "Fit Image" when image loads or container resizes
-    this._applyZoomOption("fit")
-    this._selectedOptionDisplay.textContent = "Fit Image"
+    this.applyZoomOption("fit")
+    this.selectedOptionDisplay.textContent = "Fit Image"
   }
 
-  _updateTransform = () => {
+  updateTransform = () => {
     // Apply transform to the image
-    this._img.style.transform =
-      `translate(${this._translateX}px, ${this._translateY}px) scale(${this._scale})`
+    this.img.style.transform =
+      `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`
   }
 
-  _updateZoomLevelDisplay = () => {
+  updateZoomLevelDisplay = () => {
     // Update zoom level percentage display
-    const percentage = Math.round(this._scale * 100)
-    this._zoomLevelDisplay.textContent = `${percentage}%`
+    const percentage = Math.round(this.scale * 100)
+    this.zoomLevelDisplay.textContent = `${percentage}%`
   }
 
-  _constrainToBounds = () => {
+  constrainToBounds = () => {
     // Calculate scaled dimensions
-    const scaledWidth = this._naturalWidth * this._scale
-    const scaledHeight = this._naturalHeight * this._scale
+    const scaledWidth = this.naturalWidth * this.scale
+    const scaledHeight = this.naturalHeight * this.scale
 
-    // Calculate bounds
-    const maxX = Math.max(0, (scaledWidth - this._containerWidth) / 2)
-    const maxY = Math.max(0, (scaledHeight - this._containerHeight) / 2)
+    // If image is smaller than container, center it
+    if (scaledWidth <= this.containerWidth) {
+      this.translateX = (this.containerWidth - scaledWidth) / 2
+    } else {
+      // Otherwise ensure the image doesn't show empty space on either side
+      const maxX = 0
+      const minX = this.containerWidth - scaledWidth
+      this.translateX = Math.min(Math.max(this.translateX, minX), maxX)
+    }
 
-    // Constrain translation within bounds
-    this._translateX = Math.min(Math.max(this._translateX, -maxX), maxX)
-    this._translateY = Math.min(Math.max(this._translateY, -maxY), maxY)
+    if (scaledHeight <= this.containerHeight) {
+      this.translateY = (this.containerHeight - scaledHeight) / 2
+    } else {
+      // Otherwise ensure the image doesn't show empty space on top or bottom
+      const maxY = 0
+      const minY = this.containerHeight - scaledHeight
+      this.translateY = Math.min(Math.max(this.translateY, minY), maxY)
+    }
 
     // Apply constrained transform
-    this._updateTransform()
+    this.updateTransform()
   }
 }
 
 // Register the custom element
 customElements.define("image-viewer", ImageViewer)
-
-export { ImageViewer }
